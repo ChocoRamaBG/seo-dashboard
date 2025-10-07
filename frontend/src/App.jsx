@@ -49,7 +49,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/analyze?domain=${domain}`,
+        `https://seo-dashboard-hj2d.onrender.com/api/analyze?domain=${domain}`,
         { signal: controllerRef.current.signal }
       );
       const result = await response.json();
