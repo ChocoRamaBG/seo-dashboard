@@ -28,3 +28,7 @@ def analyze_site(domain: str):
     Пример: /api/analyze?domain=buzzmaker.digital
     """
     return analyze(domain)
+
+@app.get("/")
+def root():
+    return {"message": "API е жив, ретардчо!"}
