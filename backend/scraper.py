@@ -35,16 +35,6 @@ def clean_website(url: str) -> str:
 
 
 def get_driver():
-    try:
-        if os.name == "nt":
-            subprocess.run(["taskkill", "/F", "/IM", "msedge.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["taskkill", "/F", "/IM", "msedgedriver.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            subprocess.run(["pkill", "-f", "msedge"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["pkill", "-f", "msedgedriver"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-
     options = EdgeOptions()
     options.add_argument("--inprivate")
     options.add_argument("--disable-extensions")
@@ -54,11 +44,13 @@ def get_driver():
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--headless=new")
 
+    # tmp user dir не е задължителен, но можеш да го оставиш ако искаш
     tmp_user_data_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={tmp_user_data_dir}")
 
-    # ✅ Automatically downloads the right driver on Render
-    service = EdgeService(EdgeChromiumDriverManager().install())
+    # ⚠️ Вече не теглим от Azure, директно към твоя uploaded driver
+    driver_path = os.path.join(os.path.dirname(__file__), "webdriver/msedgedriver")
+    service = EdgeService(driver_path)
 
     driver = webdriver.Edge(service=service, options=options)
     return driver, tmp_user_data_dir
