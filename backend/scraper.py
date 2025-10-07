@@ -1,25 +1,17 @@
 import logging
 import time
 import re
-import os, signal, subprocess, tempfile
-from selenium.webdriver.chrome.service import Service
-import json
-from pathlib import Path
-import tempfile
-from bs4 import BeautifulSoup
+import os, signal, subprocess, tempfile, json, shutil
 from pathlib import Path
 from urllib.parse import unquote
-import tempfile, time
+from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service as EdgeService
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.options import Options as EdgeOptions
-
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 # ---------------- CONFIG ---------------- #
 TARGET_CLASS = "sc-isexnS ispbmv"
 TO_REMOVE = ["https", "www.", ":", "/"]
@@ -42,44 +34,32 @@ def clean_website(url: str) -> str:
     return url
 
 
-
-def kill_leftover_chrome():
-    """Kill any leftover Chrome or chromedriver processes that might block new session."""
-    try:
-        if os.name == "nt":  # Windows
-            subprocess.run(["taskkill", "/F", "/IM", "chrome.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["taskkill", "/F", "/IM", "chromedriver.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:  # Linux / Mac
-            subprocess.run(["pkill", "-f", "chrome"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["pkill", "-f", "chromedriver"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-
 def get_driver():
-    # убиваме всички Edge и msedgedriver, ако има
     try:
         if os.name == "nt":
             subprocess.run(["taskkill", "/F", "/IM", "msedge.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             subprocess.run(["taskkill", "/F", "/IM", "msedgedriver.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            subprocess.run(["pkill", "-f", "msedge"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["pkill", "-f", "msedgedriver"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
 
     options = EdgeOptions()
-    options.add_argument("--inprivate")  # еквивалент на incognito
-    #options.add_argument("--headless=new")
+    options.add_argument("--inprivate")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
-
-    #optional
-    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--no-sandbox")
+    options.add_argument("--headless=new")
 
     tmp_user_data_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={tmp_user_data_dir}")
 
-    service = EdgeService("C:/Users/IRINKA/seo-dashboard/backend/WebDrivers/msedgedriver.exe")
+    # ✅ Automatically downloads the right driver on Render
+    service = EdgeService(EdgeChromiumDriverManager().install())
+
     driver = webdriver.Edge(service=service, options=options)
     return driver, tmp_user_data_dir
 
