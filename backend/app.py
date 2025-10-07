@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from scraper import analyze
+from .scraper import analyze
 from fastapi.middleware.cors import CORSMiddleware
 
 
