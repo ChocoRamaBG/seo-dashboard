@@ -9,9 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.edge.service import Service as EdgeService
-from selenium.webdriver.edge.options import Options as EdgeOptions
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
 # ---------------- CONFIG ---------------- #
 TARGET_CLASS = "sc-isexnS ispbmv"
 TO_REMOVE = ["https", "www.", ":", "/"]
@@ -34,26 +32,22 @@ def clean_website(url: str) -> str:
     return url
 
 
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
 def get_driver():
-    options = EdgeOptions()
-    options.add_argument("--inprivate")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-gpu")
+    options = Options()
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--headless=new")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-logging")    
 
-    # tmp user dir не е задължителен, но можеш да го оставиш ако искаш
-    tmp_user_data_dir = tempfile.mkdtemp()
-    options.add_argument(f"--user-data-dir={tmp_user_data_dir}")
-
-    # ⚠️ Вече не теглим от Azure, директно към твоя uploaded driver
-    driver_path = os.path.join(os.path.dirname(__file__), "Webdriver/msedgedriverlinux")
-    service = EdgeService(driver_path)
-
-    driver = webdriver.Edge(service=service, options=options)
-    return driver, tmp_user_data_dir
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    return driver  # temp_dir = None is gone
 
 def scrape_site(website: str) -> Path:
     retries = 3
@@ -61,7 +55,7 @@ def scrape_site(website: str) -> Path:
     TARGET_XPATH = '//*[@id="root"]/div[1]/div/div/div[3]/div/div[8]'
 
     for attempt in range(1, retries + 1):
-        driver, temp_dir = get_driver()
+        driver = get_driver()
         output_path = OUTPUT_DIR / f"{website}_neilpatel_data.txt"
         try:
             driver.set_page_load_timeout(30)
@@ -101,12 +95,7 @@ def scrape_site(website: str) -> Path:
 
         finally:
             driver.quit()
-            try:
-                import shutil
-                if temp_dir:
-                    shutil.rmtree(temp_dir)
-            except Exception as e:
-                logging.warning(f"Could not remove temp dir {temp_dir}: {e}")
+
 
     logging.error(f"All {retries} attempts failed. Raising last exception.")
     raise last_exception
