@@ -9,6 +9,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 # ---------------- CONFIG ---------------- #
 TARGET_CLASS = "sc-isexnS ispbmv"
@@ -32,22 +35,20 @@ def clean_website(url: str) -> str:
     return url
 
 
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+
+
+import undetected_chromedriver as uc
 
 def get_driver():
-    options = Options()
-    options.add_argument("--headless=new")
+    options = uc.ChromeOptions()
+    options.add_argument("--headless=new")  # or --headless=chrome if new fails
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-logging")    
+    driver = uc.Chrome(options=options)
+    return driver
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver  # temp_dir = None is gone
 
 def scrape_site(website: str) -> Path:
     retries = 3
