@@ -49,7 +49,7 @@ def get_driver():
     options.add_argument(f"--user-data-dir={tmp_user_data_dir}")
 
     # ⚠️ Вече не теглим от Azure, директно към твоя uploaded driver
-    driver_path = os.path.join(os.path.dirname(__file__), "Webdriver/msedgedriver")
+    driver_path = os.path.join(os.path.dirname(__file__), "Webdriver/msedgedriverlinux")
     service = EdgeService(driver_path)
 
     driver = webdriver.Edge(service=service, options=options)
