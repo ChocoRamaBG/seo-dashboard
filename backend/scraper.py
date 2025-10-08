@@ -5,10 +5,13 @@ import os, signal, subprocess, tempfile, json, shutil
 from pathlib import Path
 from urllib.parse import unquote
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import undetected_chromedriver as uc
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 # ---------------- CONFIG ---------------- #
 TARGET_CLASS = "sc-isexnS ispbmv"
@@ -18,7 +21,9 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 XPATH_POPUP = "/html/body/div[26]/div/div/div[1]"
 # ---------------------------------------- #
 
-print("🚨 MAIN SCRAPER LOADED (LINUX RENDER MODE) 🚨")
+print("🚨🚨🚨 MAIN SCRAPER LOADED 🚨🚨🚨")
+logging.info("=== MAIN SCRAPER ENTRY ===")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
@@ -30,20 +35,18 @@ def clean_website(url: str) -> str:
     return url
 
 
+
+
+import undetected_chromedriver as uc
+
 def get_driver():
     options = uc.ChromeOptions()
-    options.add_argument("--headless=new")  # for linux chrome >= 115
-    options.add_argument("--no-sandbox")  # mandatory in docker/linux
+    options.add_argument("--headless=new")  # or --headless=chrome if new fails
+    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--disable-software-rasterizer")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--remote-debugging-port=9222")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--user-data-dir=/tmp/chrome_user_data")
-
-    driver = uc.Chrome(options=options, headless=True)
+    driver = uc.Chrome(options=options)
     return driver
 
 
@@ -56,13 +59,11 @@ def scrape_site(website: str) -> Path:
         driver = get_driver()
         output_path = OUTPUT_DIR / f"{website}_neilpatel_data.txt"
         try:
-            driver.set_page_load_timeout(45)
+            driver.set_page_load_timeout(30)
             logging.info(f"[Attempt {attempt}] Scraping website: {website}")
             driver.get(f"https://app.neilpatel.com/en/traffic_analyzer/overview?domain={website}")
 
-            # Optional sleep for dynamic loading issues
-            time.sleep(5)
-
+            # Close popup if exists
             try:
                 element = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, XPATH_POPUP))
@@ -72,7 +73,8 @@ def scrape_site(website: str) -> Path:
             except Exception:
                 logging.debug("Popup not found or already closed.")
 
-            WebDriverWait(driver, 25).until(
+            # Wait for target content using XPath
+            WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, TARGET_XPATH))
             )
 
@@ -90,12 +92,20 @@ def scrape_site(website: str) -> Path:
         except Exception as e:
             last_exception = e
             logging.warning(f"Attempt {attempt} failed: {e}")
-            time.sleep(3)
+            time.sleep(2)  # chill 2 sec before retry
+
         finally:
             driver.quit()
 
+
     logging.error(f"All {retries} attempts failed. Raising last exception.")
     raise last_exception
+
+
+
+
+
+
 
 
 def parse_data(input_file: Path) -> dict:
@@ -109,6 +119,7 @@ def parse_data(input_file: Path) -> dict:
         "Top Keywords": []
     }
 
+    # Traffic Overview
     traffic_section = re.search(r"Traffic Overview\s*:\s*(.*?)SEO KEYWORDS RANKING", raw_text, re.S)
     if traffic_section:
         t_text = traffic_section.group(1)
@@ -123,6 +134,7 @@ def parse_data(input_file: Path) -> dict:
         if m := re.search(r"BACKLINKS\s*(\d+)", t_text):
             data["Traffic Overview"].setdefault("Previous Month", {})["Backlinks"] = {"Total": int(m.group(1))}
 
+    # SEO Pages
     for title, url, visits in re.findall(r"([^\n]+)\n(buzzmaker\.digital[^\n]*)\n(\d+)", raw_text):
         data["Top SEO Pages"].append({
             "Title": title.strip(),
@@ -131,6 +143,7 @@ def parse_data(input_file: Path) -> dict:
             "Backlinks": 0
         })
 
+    # Keywords
     for keyword, volume, position, visits in re.findall(r"([^\n]+)\n(\d+)\n(\d+)\n(\d+)", raw_text):
         data["Top Keywords"].append({
             "Keyword": keyword.strip(),
@@ -141,18 +154,29 @@ def parse_data(input_file: Path) -> dict:
 
     return data
 
-
 def save_json(data: dict, filename: str):
     output_path = OUTPUT_DIR / filename
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
     logging.info(f"Structured JSON saved to {output_path}")
 
+# ---------------- FastAPI / frontend-ready wrapper ---------------- #
 
 def analyze(url: str) -> dict:
+    """
+    Обвива резултата от parse_data() в стабилна структура.
+    Ако някое поле липсва, се връща 0 или празен масив.
+    """
+    # първо, извикай scrape_site за да създадеш файла
+    
     logging.info(f"ANALYZE() CALLED for {url}")
+    
     file_path = scrape_site(url)
+    
+    # после парсни съдържанието
     parsed = parse_data(file_path)
+
+    # върни го в frontend-ready форма
     return {
         "domain": parsed.get("Traffic Overview", {}).get("Domain", url),
         "traffic": {
@@ -169,7 +193,7 @@ def analyze(url: str) -> dict:
                 "backlinks": page.get("Backlinks", 0)
             }
             for page in parsed.get("Top SEO Pages", [])
-            if page.get("Title", "").lower() != "0"
+            if page.get("Title", "").lower() != "0"  # filter out titles that are exactly "0"
         ],
         "topKeywords": [
             {
@@ -182,3 +206,4 @@ def analyze(url: str) -> dict:
             if kw.get("Keyword", "").lower() != "view all"
         ]
     }
+
