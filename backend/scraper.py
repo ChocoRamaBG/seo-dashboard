@@ -49,11 +49,9 @@ def get_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    driver = uc.Chrome(
-        driver_executable_path="/usr/bin/chromedriver",
-        browser_executable_path="/usr/bin/chromium",
-        options=options
-    )
+    # Don’t specify driver_executable_path manually.
+    # Let undetected_chromedriver handle it.
+    driver = uc.Chrome(options=options, use_subprocess=True)
     return driver
 
 
