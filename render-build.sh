@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
+set -ex
 
-# update apt and install chromium + chromedriver
-sudo apt-get update
-sudo apt-get install -y chromium chromium-driver unzip
+# Create a folder for Chrome + driver
+mkdir -p /tmp/chrome
+cd /tmp/chrome
 
-# set env vars for undetected_chromedriver
-export GOOGLE_CHROME_BIN=/usr/bin/chromium
-export CHROMEDRIVER_PATH=/usr/bin/chromedriver
+# ✅ Download the latest stable Chrome
+wget -O chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chrome-linux64.zip
+unzip chrome-linux64.zip
 
-# install python deps (make sure the path exists)
+# ✅ Download matching ChromeDriver
+wget -O chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chromedriver-linux64.zip
+unzip chromedriver-linux64.zip
+
+# ✅ Export env vars for your app to find them
+export GOOGLE_CHROME_BIN="/tmp/chrome/chrome-linux64/chrome"
+export CHROMEDRIVER_PATH="/tmp/chrome/chromedriver-linux64/chromedriver"
+
+# ✅ Install python deps
+pip install --upgrade pip
 pip install -r backend/requirements.txt
