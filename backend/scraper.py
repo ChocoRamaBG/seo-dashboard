@@ -41,6 +41,7 @@ import undetected_chromedriver as uc
 
 import os, undetected_chromedriver as uc
 
+
 def get_driver():
     options = uc.ChromeOptions()
     options.add_argument("--headless=new")
@@ -49,8 +50,9 @@ def get_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    # Don’t specify driver_executable_path manually.
-    # Let undetected_chromedriver handle it.
+    # point explicitly to your Chrome binary
+    options.binary_location = "/usr/bin/google-chrome"
+
     driver = uc.Chrome(options=options, use_subprocess=True)
     return driver
 
