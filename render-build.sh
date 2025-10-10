@@ -15,10 +15,10 @@ unzip chromedriver-linux64.zip
 
 # Export env vars
 export GOOGLE_CHROME_BIN="/tmp/chrome/chrome-linux64/chrome"
-export CHROMEDRIVER_PATH="/tmp/chrome/chromedriver-linux64/chromedriver"
+export CHROMEDRIVER_PATH="/tmp/chrome/chromedriver-linux64/chromedriver"  # <-- FIXED
 
 # Go back to repo root before installing deps
-cd /opt/render/project/src   # <-- make sure this is your repo root
+cd /opt/render/project/src
 
 # Install python deps
 pip install --upgrade pip
