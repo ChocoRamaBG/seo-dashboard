@@ -49,13 +49,12 @@ def get_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    # ✅ Fix: set chrome binary if available
-    chrome_path = os.getenv("GOOGLE_CHROME_BIN", "/usr/bin/google-chrome")
-    if chrome_path:
-        options.binary_location = chrome_path
-
-    return uc.Chrome(driver_executable_path=os.getenv("CHROMEDRIVER_PATH", "/usr/bin/chromedriver"),
-                     options=options)
+    driver = uc.Chrome(
+        driver_executable_path="/usr/bin/chromedriver",
+        browser_executable_path="/usr/bin/chromium",
+        options=options
+    )
+    return driver
 
 
 def scrape_site(website: str) -> Path:
