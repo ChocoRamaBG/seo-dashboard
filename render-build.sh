@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-set -o errexit
+set -e  # stop if any command fails
 
-# install Chrome and chromedriver
-apt-get update && apt-get install -y chromium chromium-driver
+# Install Chrome + Chromedriver
+apt-get update
+apt-get install -y chromium chromium-driver
 
-# install python deps
+# Just to confirm paths
+which chromium || echo "Chromium not found!"
+which chromedriver || echo "Chromedriver not found!"
+
+# Install Python dependencies
 pip install -r backend/requirements.txt
