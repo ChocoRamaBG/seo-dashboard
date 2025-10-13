@@ -47,20 +47,36 @@ import undetected_chromedriver as uc
 
 def get_driver():
     options = uc.ChromeOptions()
+
+    # ---- Stability Flags ----
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-background-networking")
+    options.add_argument("--disable-default-apps")
+    options.add_argument("--disable-sync")
+    options.add_argument("--disable-translate")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument("--single-process")  # <--- fixes some random freezes
 
-    # use the env vars you just exported in build step
-    options.binary_location = os.environ["GOOGLE_CHROME_BIN"]
+    # ---- Tell it where Chrome lives (from your setup script) ----
+    options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
 
+    # ---- Create driver ----
     driver = uc.Chrome(
         options=options,
-        driver_executable_path=os.environ["CHROMEDRIVER_PATH"],
+        driver_executable_path=os.environ.get("CHROMEDRIVER_PATH"),
         use_subprocess=True
     )
+
+    # ---- Set page load + script timeouts ----
+    driver.set_page_load_timeout(120)   # was 30 before
+    driver.set_script_timeout(120)
+
     return driver
 
 
