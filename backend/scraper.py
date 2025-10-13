@@ -89,7 +89,7 @@ def scrape_site(website: str) -> Path:
         driver = get_driver()
         output_path = OUTPUT_DIR / f"{website}_neilpatel_data.txt"
         try:
-            driver.set_page_load_timeout(30)
+            driver.set_page_load_timeout(120)
             logging.info(f"[Attempt {attempt}] Scraping website: {website}")
             driver.get(f"https://app.neilpatel.com/en/traffic_analyzer/overview?domain={website}")
 
@@ -104,7 +104,7 @@ def scrape_site(website: str) -> Path:
                 logging.debug("Popup not found or already closed.")
 
             # Wait for target content using XPath
-            WebDriverWait(driver, 20).until(
+            WebDriverWait(driver, 80).until(
                 EC.presence_of_element_located((By.XPATH, TARGET_XPATH))
             )
 
