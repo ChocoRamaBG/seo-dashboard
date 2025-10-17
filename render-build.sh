@@ -7,11 +7,11 @@ cd /opt/render/project/src
 # Upgrade pip
 pip install --upgrade pip
 
-# Install latest greenlet compatible with Python 3.13
+# Install greenlet compatible with Python 3.13 first
 pip install greenlet==3.2.4
 
-# Install all other dependencies
-pip install -r backend/requirements.txt
+# Then install all other requirements but ignore greenlet
+pip install --ignore-installed=greenlet -r backend/requirements.txt
 
 # Install Chromium for Playwright
 python -m playwright install chromium
