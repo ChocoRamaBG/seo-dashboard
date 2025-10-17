@@ -9,7 +9,7 @@ charset-normalizer==3.4.3
 click==8.2.1
 colorama==0.4.6
 fastapi==0.116.1
-greenlet==3.3.4
+greenlet==3.2.4
 h11==0.16.0
 httptools==0.6.4
 idna==3.10
@@ -41,6 +41,7 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 websockets==15.0.1
 wsproto==1.2.0
+
 
 
 
