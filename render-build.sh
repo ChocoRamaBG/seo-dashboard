@@ -7,8 +7,8 @@ cd /opt/render/project/src
 # Upgrade pip
 pip install --upgrade pip
 
-# Force install greenlet first to avoid build issues
-pip install greenlet==3.3.3
+# Install latest greenlet compatible with Python 3.13
+pip install greenlet==3.2.4
 
 # Install all other dependencies
 pip install -r backend/requirements.txt
