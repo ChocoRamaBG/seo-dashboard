@@ -10,8 +10,8 @@ pip install --upgrade pip
 # Install greenlet compatible with Python 3.13 first
 pip install greenlet==3.2.4
 
-# Then install all other requirements but ignore greenlet
-pip install --ignore-installed=greenlet -r backend/requirements.txt
+# Then install all other requirements but ignore previously installed packages
+pip install --ignore-installed -r backend/requirements.txt
 
 # Install Chromium for Playwright
 python -m playwright install chromium
