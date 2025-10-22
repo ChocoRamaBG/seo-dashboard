@@ -1,45 +1,25 @@
 #!/usr/bin/env bash
 set -ex
 
+# Create a folder for Chrome + driver
+mkdir -p /tmp/chrome
+cd /tmp/chrome
+
+# Download Chrome
+wget -O chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chrome-linux64.zip
+unzip chrome-linux64.zip
+
+# Download ChromeDriver
+wget -O chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.84/linux64/chromedriver-linux64.zip
+unzip chromedriver-linux64.zip
+
+# Export env vars
+export GOOGLE_CHROME_BIN="/tmp/chrome/chrome-linux64/chrome"
+export CHROMEDRIVER_PATH="/tmp/chrome/chromedriver-linux64/chromedriver"  # <-- FIXED
+
+# Go back to repo root before installing deps
 cd /opt/render/project/src
 
-# Update & install dependencies required by Chromium
-apt-get update
-apt-get install -y \
-    wget \
-    gnupg \
-    libnss3 \
-    libx11-xcb1 \
-    libxcb-dri3-0 \
-    libdrm2 \
-    libgbm1 \
-    libasound2 \
-    libxrandr2 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libxdamage1 \
-    libxcomposite1 \
-    libxext6 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libcairo2 \
-    libgtk-3-0 \
-    fonts-liberation \
-    libappindicator3-1 \
-    xdg-utils \
-    libu2f-udev
-
-# Upgrade pip
+# Install python deps
 pip install --upgrade pip
-
-# Install greenlet (must be compatible)
-pip install greenlet==3.2.4
-
-# Install all Python deps
 pip install -r backend/requirements.txt
-
-# Install Chromium for Playwright
-python -m playwright install chromium
