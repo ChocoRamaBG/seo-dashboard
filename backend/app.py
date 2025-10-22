@@ -2,15 +2,13 @@ from fastapi import FastAPI
 from backend.scraper import analyze
 from fastapi.middleware.cors import CORSMiddleware
 
-
-
 app = FastAPI()
 
-
-# allow React dev server
+# allow localhost dev server AND your deployed frontend
 origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://seo-dashboard.wuaze.com"  # <-- add your live frontend here
 ]
 
 app.add_middleware(
